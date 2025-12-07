@@ -29,44 +29,27 @@
 ;
 
 ;
-; In order to make this code more easily portable, we have to be
-; explicit about its implementation dependencies.  To do this, we
-; have the following variable.  Please adjust it before trying to
-; run this code.  See also the macro, scheme-implementation-case,
-; which follows shortly.
+; Chez Scheme implementation
 ;
-; Note that some of these dependencies (i.e. gsort) are purely for
-; convenience (i.e. saving me from writing sort from scratch).
-; Others are more pressing, like define-macro.
+; define-macro provides traditional Lisp-style unhygienic macros
+; using Chez's syntax-case system.
 ;
-;
-(define what-scheme-implementation
-  'mit
- ;'chez
-  )
-
-(case what-scheme-implementation
-  ((mit)
-   (syntax-table/define                    ;Kind of like DEFMACRO
-     user-initial-syntax-table             ;  lifted from Cornell.
-     'DEFINE-MACRO
-     (macro (formals . body)
-	    (if (not (pair? formals))
-		(error "DEFINE-MACRO: First argument must be formals."))
-	    `(SYNTAX-TABLE-DEFINE
-	       USER-INITIAL-SYNTAX-TABLE
-	       (QUOTE ,(car formals))
-	       ,(append (list 'MACRO (cdr formals)) body)))))
-  ((chez)
-   ???))
-
+(define-syntax define-macro
+  (lambda (x)
+    (syntax-case x ()
+      [(_ (name . args) body ...)
+       #'(define-syntax name
+           (lambda (y)
+             (syntax-case y ()
+               [(_ . actual-args)
+                (datum->syntax #'name
+                  (apply (lambda args body ...)
+                         (syntax->datum #'actual-args)))])))])))
 
 (define gsort
-  (case what-scheme-implementation
-    ((mit)  (lambda (predicate list) (sort list predicate)))
-    ((chez) (lambda (predicate list) (sort predicate list)))))
+  (lambda (predicate list) (sort predicate list)))
 
-(define simple-printer (lambda () barf))
+(define simple-printer (lambda () #f))
 
 
 

@@ -150,7 +150,7 @@
 ; to load the support library.
 ;
 ;
-(load "support")
+(load "support.scm")
 
 ;
 ; Then, we need to build what, in a more real implementation, would be
@@ -179,13 +179,6 @@
 (define %instance-set!       ???)
 
 (let ((instance-tag (list '%instance-tag)))
-
-  (case what-scheme-implementation
-    ((mit)
-     (unparser/set-tagged-vector-method!      ;Make objects print a bit
-      instance-tag                            ;more reasonably.  Scheme
-      (unparser/standard-method 'object)))    ;is pretty feeble in this
-    ((chez)))                                 ;regard.
 
   (set! %allocate-instance
 	(lambda (class nfields)
@@ -231,7 +224,7 @@
 (define %entity-ref        ???)
 (define %entity-set!       ???)
 
-(letrec ((entities ())
+(letrec ((entities '())
 	 (get-vector
 	  (lambda (closure)
 	    (let ((cell (assq closure entities)))
@@ -373,7 +366,7 @@
 	    ((eq? class <generic>)
 	     (let ((new (%allocate-entity class
 					  (length (class-slots class)))))
-	       (slot-set! new 'methods ())
+	       (slot-set! new 'methods '())
 	       new))
 	    ((eq? class <method>)
 	     (let ((new (%allocate-instance
